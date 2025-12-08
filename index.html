@@ -377,25 +377,37 @@
         // Update active filters display
         function updateActiveFilters() {
             const activeFiltersDiv = document.getElementById('activeFilters');
-            const filters = [];
+            
+            // Clear existing content
+            activeFiltersDiv.innerHTML = '';
 
+            const filterTypes = [];
             if (currentFilters.search) {
-                filters.push(`Search: "${currentFilters.search}"`);
+                filterTypes.push({ type: 'search', label: `Search: "${currentFilters.search}"` });
             }
             if (currentFilters.region) {
-                filters.push(`Region: ${currentFilters.region}`);
+                filterTypes.push({ type: 'region', label: `Region: ${currentFilters.region}` });
             }
 
-            if (filters.length > 0) {
-                activeFiltersDiv.innerHTML = `
-                    <span>Active filters: </span>
-                    ${filters.map((f, i) => `
-                        <span class="filter-tag">
-                            ${f}
-                            <span class="close" onclick="clearFilter('${i === 0 && currentFilters.search ? 'search' : 'region'}')">×</span>
-                        </span>
-                    `).join('')}
-                `;
+            if (filterTypes.length > 0) {
+                const span = document.createElement('span');
+                span.textContent = 'Active filters: ';
+                activeFiltersDiv.appendChild(span);
+
+                filterTypes.forEach(filter => {
+                    const tag = document.createElement('span');
+                    tag.className = 'filter-tag';
+                    tag.textContent = filter.label + ' ';
+                    
+                    const closeBtn = document.createElement('span');
+                    closeBtn.className = 'close';
+                    closeBtn.textContent = '×';
+                    closeBtn.onclick = () => clearFilter(filter.type);
+                    
+                    tag.appendChild(closeBtn);
+                    activeFiltersDiv.appendChild(tag);
+                });
+
                 activeFiltersDiv.style.display = 'block';
             } else {
                 activeFiltersDiv.style.display = 'none';
