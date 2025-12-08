@@ -378,15 +378,17 @@
         function updateActiveFilters() {
             const activeFiltersDiv = document.getElementById('activeFilters');
             
-            // Clear existing content
-            activeFiltersDiv.innerHTML = '';
+            // Clear existing content securely
+            while (activeFiltersDiv.firstChild) {
+                activeFiltersDiv.removeChild(activeFiltersDiv.firstChild);
+            }
 
             const filterTypes = [];
             if (currentFilters.search) {
-                filterTypes.push({ type: 'search', label: `Search: "${currentFilters.search}"` });
+                filterTypes.push({ type: 'search', value: currentFilters.search, prefix: 'Search: "', suffix: '"' });
             }
             if (currentFilters.region) {
-                filterTypes.push({ type: 'region', label: `Region: ${currentFilters.region}` });
+                filterTypes.push({ type: 'region', value: currentFilters.region, prefix: 'Region: ', suffix: '' });
             }
 
             if (filterTypes.length > 0) {
@@ -397,12 +399,21 @@
                 filterTypes.forEach(filter => {
                     const tag = document.createElement('span');
                     tag.className = 'filter-tag';
-                    tag.textContent = filter.label + ' ';
+                    
+                    // Safely construct the filter label using textContent
+                    const labelText = document.createTextNode(filter.prefix);
+                    tag.appendChild(labelText);
+                    
+                    const valueText = document.createTextNode(filter.value);
+                    tag.appendChild(valueText);
+                    
+                    const suffixText = document.createTextNode(filter.suffix + ' ');
+                    tag.appendChild(suffixText);
                     
                     const closeBtn = document.createElement('span');
                     closeBtn.className = 'close';
                     closeBtn.textContent = '×';
-                    closeBtn.onclick = () => clearFilter(filter.type);
+                    closeBtn.addEventListener('click', () => clearFilter(filter.type));
                     
                     tag.appendChild(closeBtn);
                     activeFiltersDiv.appendChild(tag);
