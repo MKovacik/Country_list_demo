@@ -201,7 +201,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th class="sortable" onclick="sortTable('flag')">Flag</th>
+                                <th>Flag</th>
                                 <th class="sortable" onclick="sortTable('name')">Country Name</th>
                                 <th class="sortable" onclick="sortTable('region')">Region</th>
                                 <th class="sortable" onclick="sortTable('capital')">Capital</th>
@@ -279,10 +279,13 @@
                 }
 
                 // String comparison
+                // Ensure values are strings for localeCompare
+                const aStr = String(aVal);
+                const bStr = String(bVal);
                 if (currentSort.direction === 'asc') {
-                    return aVal.localeCompare(bVal);
+                    return aStr.localeCompare(bStr);
                 } else {
-                    return bVal.localeCompare(aVal);
+                    return bStr.localeCompare(aStr);
                 }
             });
 
@@ -298,7 +301,7 @@
                 header.classList.remove('sort-asc', 'sort-desc');
             });
 
-            const columnNames = ['flag', 'name', 'region', 'capital', 'languages', 'population', 'area'];
+            const columnNames = ['name', 'region', 'capital', 'languages', 'population', 'area'];
             const currentIndex = columnNames.indexOf(currentSort.column);
             
             if (currentIndex !== -1) {
