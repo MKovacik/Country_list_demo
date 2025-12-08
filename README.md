@@ -13,9 +13,12 @@ A simple web application that displays country information from `countries.json`
   - Population (formatted with thousands separator)
   - Area in km² (formatted with thousands separator)
 
+- 🔍 **Search**: Real-time search functionality to quickly find countries by name
+- 🗂️ **Filter by Region**: Dropdown filter to show countries from specific regions (Africa, Americas, Asia, Europe, Oceania)
 - 🔄 **Sortable Columns**: Click on any column header to sort the data in ascending or descending order
+- 🏷️ **Active Filters Display**: Visual indicators showing active search terms and filters with the ability to clear them individually
 - 📱 **Responsive Design**: Works on desktop and mobile devices
-- 📈 **Statistics**: Shows total countries, total population, and total area at the bottom
+- 📈 **Dynamic Statistics**: Shows total countries, total population, and total area that updates based on active filters
 
 ## How to View
 

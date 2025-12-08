@@ -120,6 +120,97 @@
             color: #6c757d;
         }
 
+        .controls {
+            padding: 20px 30px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-box label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .filter-box select {
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1em;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-box select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .active-filters {
+            padding: 0 30px 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .filter-tag {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-right: 8px;
+            font-size: 0.85em;
+        }
+
+        .filter-tag .close {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .filter-tag .close:hover {
+            color: #f8f9fa;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -128,6 +219,26 @@
             h1 {
                 font-size: 1.5em;
                 padding: 20px;
+            }
+
+            .controls {
+                padding: 15px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-box {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 5px;
+            }
+
+            .filter-box select {
+                width: 100%;
             }
 
             .table-container {
@@ -148,12 +259,33 @@
                 padding: 15px;
                 font-size: 0.8em;
             }
+
+            .active-filters {
+                padding: 0 15px 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌍 Countries of the World</h1>
+        <div class="controls">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 Search countries by name..." 
+                    aria-label="Search countries"
+                >
+            </div>
+            <div class="filter-box">
+                <label for="regionFilter">Region:</label>
+                <select id="regionFilter" aria-label="Filter by region">
+                    <option value="">All Regions</option>
+                </select>
+            </div>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display: none;"></div>
         <div id="content">
             <div class="loading">Loading countries data...</div>
         </div>
@@ -162,7 +294,9 @@
 
     <script>
         let countriesData = [];
+        let filteredData = [];
         let currentSort = { column: null, direction: 'asc' };
+        let currentFilters = { search: '', region: '' };
 
         // Load and display countries data
         async function loadCountries() {
@@ -172,12 +306,112 @@
                     throw new Error('Failed to load countries data');
                 }
                 countriesData = await response.json();
-                displayCountries(countriesData);
-                updateStats(countriesData);
+                filteredData = countriesData;
+                populateRegionFilter();
+                displayCountries(filteredData);
+                updateStats(filteredData);
+                setupEventListeners();
             } catch (error) {
                 document.getElementById('content').innerHTML = 
                     `<div class="error">Error loading countries data: ${error.message}</div>`;
             }
+        }
+
+        // Populate region filter dropdown with unique regions
+        function populateRegionFilter() {
+            const regions = [...new Set(countriesData.map(c => c.region).filter(Boolean))].sort();
+            const select = document.getElementById('regionFilter');
+            regions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                select.appendChild(option);
+            });
+        }
+
+        // Setup event listeners for search and filter
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            const regionFilter = document.getElementById('regionFilter');
+
+            // Search with debounce for performance
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentFilters.search = e.target.value.toLowerCase().trim();
+                    applyFilters();
+                }, 300);
+            });
+
+            // Region filter
+            regionFilter.addEventListener('change', (e) => {
+                currentFilters.region = e.target.value;
+                applyFilters();
+            });
+        }
+
+        // Apply all filters and update display
+        function applyFilters() {
+            filteredData = countriesData.filter(country => {
+                const nameMatch = !currentFilters.search || 
+                    (country.name?.common || '').toLowerCase().includes(currentFilters.search);
+                const regionMatch = !currentFilters.region || 
+                    country.region === currentFilters.region;
+                
+                return nameMatch && regionMatch;
+            });
+
+            // Reapply current sort if any
+            if (currentSort.column) {
+                const sortedData = sortData(filteredData, currentSort.column, currentSort.direction);
+                displayCountries(sortedData);
+            } else {
+                displayCountries(filteredData);
+            }
+            
+            updateStats(filteredData);
+            updateActiveFilters();
+        }
+
+        // Update active filters display
+        function updateActiveFilters() {
+            const activeFiltersDiv = document.getElementById('activeFilters');
+            const filters = [];
+
+            if (currentFilters.search) {
+                filters.push(`Search: "${currentFilters.search}"`);
+            }
+            if (currentFilters.region) {
+                filters.push(`Region: ${currentFilters.region}`);
+            }
+
+            if (filters.length > 0) {
+                activeFiltersDiv.innerHTML = `
+                    <span>Active filters: </span>
+                    ${filters.map((f, i) => `
+                        <span class="filter-tag">
+                            ${f}
+                            <span class="close" onclick="clearFilter('${i === 0 && currentFilters.search ? 'search' : 'region'}')">×</span>
+                        </span>
+                    `).join('')}
+                `;
+                activeFiltersDiv.style.display = 'block';
+            } else {
+                activeFiltersDiv.style.display = 'none';
+            }
+        }
+
+        // Clear specific filter
+        function clearFilter(type) {
+            if (type === 'search') {
+                currentFilters.search = '';
+                document.getElementById('searchInput').value = '';
+            } else if (type === 'region') {
+                currentFilters.region = '';
+                document.getElementById('regionFilter').value = '';
+            }
+            applyFilters();
         }
 
         // Format languages from object to comma-separated string
@@ -196,6 +430,11 @@
         function displayCountries(countries) {
             const content = document.getElementById('content');
             
+            if (countries.length === 0) {
+                content.innerHTML = '<div class="no-results">No countries found matching your criteria. Try adjusting your search or filters.</div>';
+                return;
+            }
+
             const tableHTML = `
                 <div class="table-container">
                     <table>
@@ -235,18 +474,9 @@
             content.innerHTML = tableHTML;
         }
 
-        // Sort table by column
-        function sortTable(column) {
-            // Determine sort direction
-            if (currentSort.column === column) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.column = column;
-                currentSort.direction = 'asc';
-            }
-
-            // Sort the data
-            const sortedData = [...countriesData].sort((a, b) => {
+        // Sort data helper function
+        function sortData(data, column, direction) {
+            return [...data].sort((a, b) => {
                 let aVal, bVal;
 
                 switch (column) {
@@ -269,25 +499,38 @@
                     case 'population':
                         aVal = a.population || 0;
                         bVal = b.population || 0;
-                        return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+                        return direction === 'asc' ? aVal - bVal : bVal - aVal;
                     case 'area':
                         aVal = a.area || 0;
                         bVal = b.area || 0;
-                        return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+                        return direction === 'asc' ? aVal - bVal : bVal - aVal;
                     default:
                         return 0;
                 }
 
                 // String comparison
-                // Ensure values are strings for localeCompare
                 const aStr = String(aVal);
                 const bStr = String(bVal);
-                if (currentSort.direction === 'asc') {
+                if (direction === 'asc') {
                     return aStr.localeCompare(bStr);
                 } else {
                     return bStr.localeCompare(aStr);
                 }
             });
+        }
+
+        // Sort table by column
+        function sortTable(column) {
+            // Determine sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            // Sort the filtered data
+            const sortedData = sortData(filteredData, column, currentSort.direction);
 
             // Update the display
             displayCountries(sortedData);
