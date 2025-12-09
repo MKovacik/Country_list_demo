@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Utils Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #667eea;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .flag-img {
+            width: 40px;
+            height: 30px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Country Utils Test Page</h1>
+    
+    <div class="info">
+        <strong>ℹ️ Purpose:</strong> This page demonstrates the countryUtils.js utility functions working in a browser environment.
+    </div>
+
+    <div class="test-section">
+        <h2>Test 1: Flattening a Single Country</h2>
+        <div id="test1"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Handling Missing Data</h2>
+        <div id="test2"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Processing Multiple Countries</h2>
+        <div id="test3"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Display First 10 Countries in Table</h2>
+        <div id="test4"></div>
+    </div>
+
+    <!-- Include the utility script -->
+    <script src="countryUtils.js"></script>
+    
+    <script>
+        // Test 1: Flatten a single country
+        function test1() {
+            const sampleCountry = {
+                name: { common: "France" },
+                region: "Europe",
+                capital: ["Paris"],
+                languages: { fra: "French" },
+                population: 67391582,
+                area: 551695,
+                flags: { png: "https://flagcdn.com/w320/fr.png" }
+            };
+
+            const flattened = window.CountryUtils.flattenCountryFields(sampleCountry);
+            
+            document.getElementById('test1').innerHTML = `
+                <p class="success">✓ Test passed!</p>
+                <p><strong>Input (original):</strong></p>
+                <pre>${JSON.stringify(sampleCountry, null, 2)}</pre>
+                <p><strong>Output (flattened):</strong></p>
+                <pre>${JSON.stringify(flattened, null, 2)}</pre>
+            `;
+        }
+
+        // Test 2: Handle missing data
+        function test2() {
+            const countryWithMissingData = {
+                name: { common: "Antarctica" },
+                area: 14000000
+                // Missing: region, capital, languages, population, flags.png
+            };
+
+            const flattened = window.CountryUtils.flattenCountryFields(countryWithMissingData);
+            
+            document.getElementById('test2').innerHTML = `
+                <p class="success">✓ Test passed - Missing data handled gracefully!</p>
+                <p><strong>Input (with missing fields):</strong></p>
+                <pre>${JSON.stringify(countryWithMissingData, null, 2)}</pre>
+                <p><strong>Output (with N/A for missing fields):</strong></p>
+                <pre>${JSON.stringify(flattened, null, 2)}</pre>
+            `;
+        }
+
+        // Test 3: Process multiple countries
+        function test3() {
+            const countries = [
+                {
+                    name: { common: "Germany" },
+                    region: "Europe",
+                    capital: ["Berlin"],
+                    languages: { deu: "German" },
+                    population: 83240525,
+                    area: 357114,
+                    flags: { png: "https://flagcdn.com/w320/de.png" }
+                },
+                {
+                    name: { common: "Japan" },
+                    region: "Asia",
+                    capital: ["Tokyo"],
+                    languages: { jpn: "Japanese" },
+                    population: 125836021,
+                    area: 377930,
+                    flags: { png: "https://flagcdn.com/w320/jp.png" }
+                }
+            ];
+
+            const flattened = window.CountryUtils.flattenCountriesArray(countries);
+            
+            document.getElementById('test3').innerHTML = `
+                <p class="success">✓ Test passed - Batch processing works!</p>
+                <p><strong>Processed ${flattened.length} countries</strong></p>
+                <pre>${JSON.stringify(flattened, null, 2)}</pre>
+            `;
+        }
+
+        // Test 4: Load from countries.json and display in table
+        async function test4() {
+            try {
+                const response = await fetch('countries.json');
+                const countries = await response.json();
+                
+                const flattened = window.CountryUtils.flattenCountriesArray(countries);
+                const first10 = flattened.slice(0, 10);
+                
+                let tableHTML = `
+                    <p class="success">✓ Successfully loaded and flattened ${flattened.length} countries from countries.json</p>
+                    <p><strong>Displaying first 10 countries:</strong></p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Flag</th>
+                                <th>Name</th>
+                                <th>Region</th>
+                                <th>Capital</th>
+                                <th>Languages</th>
+                                <th>Population</th>
+                                <th>Area (km²)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                first10.forEach(country => {
+                    tableHTML += `
+                        <tr>
+                            <td><img src="${country.flagUrl}" alt="${country.name}" class="flag-img" onerror="this.style.display='none'"></td>
+                            <td>${country.name}</td>
+                            <td>${country.region}</td>
+                            <td>${country.capital}</td>
+                            <td>${country.languages}</td>
+                            <td>${window.CountryUtils.formatNumber(country.population)}</td>
+                            <td>${window.CountryUtils.formatNumber(country.area)}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('test4').innerHTML = tableHTML;
+            } catch (error) {
+                document.getElementById('test4').innerHTML = `
+                    <p class="error">✗ Error loading countries.json: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Run all tests
+        test1();
+        test2();
+        test3();
+        test4();
+    </script>
+</body>
+</html>
