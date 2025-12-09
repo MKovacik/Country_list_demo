@@ -4,6 +4,18 @@
  * This module provides utility functions to extract and flatten country data
  * from the REST Countries API format (countries.json) into a simplified format
  * suitable for table display.
+ * 
+ * Note: This utility is a standalone module that can be used independently from
+ * the existing index.html. While index.html contains similar inline functions
+ * (formatLanguages, formatNumber), this module is designed as a reusable library
+ * that can be:
+ * - Used in Node.js environments
+ * - Integrated into other web pages or applications
+ * - Used for data processing pipelines
+ * - Exported and distributed as a standalone utility
+ * 
+ * The existing index.html can continue to use its inline functions, or it can
+ * optionally be refactored to use this utility module in the future.
  */
 
 /**
@@ -140,12 +152,7 @@ function formatLanguages(languages) {
     }
     
     const languageList = Object.values(languages);
-    
-    if (languageList.length === 0) {
-        return 'N/A';
-    }
-    
-    return languageList.join(', ');
+    return languageList.length > 0 ? languageList.join(', ') : 'N/A';
 }
 
 /**
@@ -163,14 +170,9 @@ function formatLanguages(languages) {
  * // Returns: "N/A"
  */
 function formatNumber(num) {
-    if (num === null || num === undefined || (typeof num !== 'number' && num !== 'N/A')) {
+    if (!num && num !== 0) {
         return 'N/A';
     }
-    
-    if (num === 'N/A') {
-        return 'N/A';
-    }
-    
     return num.toLocaleString();
 }
 
